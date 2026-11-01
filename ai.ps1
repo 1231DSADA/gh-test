@@ -45,7 +45,12 @@ function Ask($model, $messages) {
 }
 
 if ($Question) {
-    Ask $m @(@{ role = "user"; content = ($Question -join " ") })
+    try { Ask $m @(@{ role = "user"; content = ($Question -join " ") }) }
+    catch {
+        if ($local) { Write-Host "本地 Ollama 未响应（服务未启动或正在加载）。稍等几秒重试，或手动拉起: schtasks /Run /TN OllamaServe" -ForegroundColor Red }
+        else { Write-Host "云端 API 调用失败: $($_.Exception.Message)" -ForegroundColor Red }
+        exit 1
+    }
 } else {
     if ([Console]::IsInputRedirected) { Write-Host "无交互终端，请用 .\ai.ps1 `"问题`" 单次模式" -ForegroundColor Red; exit 1 }
     Write-Host "AI 终端助手 [$tag | $m]" -ForegroundColor Cyan
